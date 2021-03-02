@@ -1,0 +1,16 @@
+
+body {
+    width: 100px;
+    height: 100px;
+}
+
+
+.add-button {
+    width: 100%;
+    background-color: aquamarine;
+    color: black;
+    height: 20px;
+    text-align: center;
+    margin: 10px;
+    white-space: normal !important;
+}

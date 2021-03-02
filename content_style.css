@@ -1,0 +1,20 @@
+.youtodo_list_element {
+    font-size: 15px;
+    margin-left: 10px;
+    border: 1px solid black;
+
+}
+
+.youtodo_list_element_left {
+    width: 100px;
+    height: 20px;
+}
+
+.youtodo_list_element_right {
+    margin-left: 30px;
+    
+}
+
+.youtodo_list {
+    display: flexbox;
+}

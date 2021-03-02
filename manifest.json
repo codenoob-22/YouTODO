@@ -1,0 +1,31 @@
+{
+    "manifest_version": 2,
+  
+    "name": "Youto_Do",
+    "description": "this is a reminder tool that makes you remind of finishing a playlist each day.",
+    "version": "1.0",
+    
+    "browser_action": {
+        "default_popup": "popup.html"
+    },
+    
+
+    "content_scripts": [
+        {
+            "css": ["content_style.css"],
+            "matches": [
+                "https://www.youtube.com/*list=*",
+                "https://www.youtube.com/"
+            ],
+            "js": ["content.js"]
+        }
+    ],
+
+    "permissions": [
+      "notifications",
+      "alarms",
+      "activeTab",
+      "storage",
+      "tabs"
+    ]
+  }
