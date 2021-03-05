@@ -41,7 +41,14 @@ function getTotalVideos(){
 
 function getCurrentVideo() {
     d = document.evaluate('\/\/*[@id="publisher-container"]/div/yt-formatted-string/span[1]', document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null)
-    return d.singleNodeValue.textContent;
+    value = d.singleNodeValue
+    if(value){
+        return value.textContent;
+    }
+    // trying method 2
+    url = document.createElement.URL;
+    data = getUrlData(url);
+    return data['index'];
 }
 
 
@@ -50,16 +57,6 @@ function getName() {
     return d.singleNodeValue.textContent;
 }
 
-
-function addPlaylist(){
-    let totalVideos = getTotalVideos();
-    let name = getName();
-    url = document.URL;
-    let setObj = {}
-    setObj[url] = {name: name, total: totalVideos, progress: 0}
-    addToStorage(setObj)
-    console.log(`total number of videos- ${totalVideos}`);
-}
 
 function getUrlData(url) {
     query_string = url.split('?')[1];
@@ -74,6 +71,10 @@ function getUrlData(url) {
     return obj;
 }
 
+
+
+// main functions
+
 async function trackPlaylist(){
     
 
@@ -81,7 +82,12 @@ async function trackPlaylist(){
     let playlistId = getUrlData(url)['list']
     const playlistUrl = `https://www.youtube.com/playlist?list=${playlistId}`;
 
-    currentVideo = parseInt(getCurrentVideo(), 10);
+    currentVideo = getCurrentVideo();
+    if(!currentVideo) {
+        console.log("not a running playlist!");
+        return;
+    }
+    currentVideo = parseInt(currentVideo, 10);
     youtodoList = await getFromStorage('youtodoList');
     youtodoList = youtodoList['youtodoList'];
     if(youtodoList) {
@@ -110,35 +116,68 @@ async function trackPlaylist(){
     // console.log(`current progress ${currentVideo} / ${totalVideos[url].total}`);
 }
 
-
-
+async function removePlaylist(event) {
+    element = event.target.parentElement;
+    playlistUrl = element.children[0].href;
+    youtodoList = await getFromStorage('youtodoList');
+    youtodoList = youtodoList['youtodoList']
+    newList = []
+    // using loops since filter was not working
+    for(let i = 0; i < youtodoList.length; i++) {
+        if(youtodoList[i].url == playlistUrl){
+            continue;
+        }
+        // console.log(youtodoList[i]);
+        newList.push(youtodoList[i])
+    }
+    // console.log(newList);
+    await addToStorage({"youtodoList": newList});
+    showPendingPlaylists();
+}
 
 
 // main function to show playlists
 function injectToPage(listOfPlaylists) {
+
+    if(listOfPlaylists.length == 0) return;
+
     const divContainer = document.querySelector("#primary")
-    const divToAdd = document.createElement("div");
+    let divToAdd =  document.querySelector('#youtodoListView')
+    if(!divToAdd) {
+        divToAdd = document.createElement('div');
+        divToAdd.setAttribute('id', 'youtodoListView');
+    }
+
+    // removing past elements - lol 
+    divToAdd.innerHTML = ''
     var node = document.createElement('ol')
     let title = document.createElement("p")
-    title.innerHTML = "you have pending playlists to complete";
+    title.innerHTML = "You have pending playlists to complete";
     title.setAttribute("style", "margin-bottom: 20px;");
     divToAdd.appendChild(title);
 
-    function createListElement(object) {
+    function createListElement(object, index) {
         var node = document.createElement('li');
+        node.setAttribute('id', `youtodo_list_element_${index}`)
         node.innerHTML = `
             <a href=${object.url} target="_blank" class="youtodo_list_element_left">${object.playlistName}</a>
-            <span class="youtodo_list_element_right">${object.progress}</span>
-            <span class="youtodo_list_element_right"> X </span>
+            <span class="youtodo_list_progress">${object.progress}</span>
         `
+        button = document.createElement('button')
+        button.setAttribute('class', 'youtodo_list_delete_button')
+        button.innerText = "remove"
+        button.addEventListener('click', removePlaylist);
+        node.append(button)
         node.setAttribute("class", "youtodo_list_element");
+
         return node;
     }
 
-    listOfPlaylists.forEach((obj) => {
-        x = createListElement(obj);
-        node.append(x);
-    })
+    for(let i = 0; i < listOfPlaylists.length; i++) {
+        obj = listOfPlaylists[i]
+        element = createListElement(obj, i + 1);
+        node.append(element);
+    }
 
     divToAdd.setAttribute("style", "padding: 100px; font-size: 20px; hieght: 50px")
     divToAdd.append(node);
@@ -170,6 +209,15 @@ async function showPendingPlaylists() {
     // chrome.storage.local.remove("youtodoList", function(){ console.log("youtodo-list cleared!")});
 
 }
+
+// assigning events
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if(request.message=="startTracking"){
+        trackPlaylist();
+    }
+    sendResponse({message: "started tracking"});
+});
 
 window.onload = function(){
 

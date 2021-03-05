@@ -32,6 +32,12 @@ scripts = {
 
 }
 
+async function startTracking() {
+    chrome.runtime.sendMessage({message: "trackPlaylist"}, function(response) {
+        console.log(response.farewell);
+      });
+}
+
 
 async function getcurrentTab() {
     return new Promise((resolve, reject)=> {
@@ -103,7 +109,7 @@ async function executor() {
         following is the pipeline
         get the values from the DOM page,
         save it to DB
-        for now just add progress as 0 to when user wtches it will automatically be set. 
+        send message to content.js to start tracking
 
     */
     let currentTab = await getcurrentTab();
@@ -127,11 +133,6 @@ async function executor() {
     let setObj = {}
     let playlistUrl = `https://www.youtube.com/playlist?list=${urlData['list']}`
 
-    setObj[playlistUrl] = {
-        totalVideos: parseInt(totalVideos, 10),
-        latestUrl: currentUrl,
-        progress: 0
-    }
 
     let youtodoList = await getFromStorage('youtodoList');
     let playlists = youtodoList["youtodoList"];
@@ -144,6 +145,10 @@ async function executor() {
     else{
         const playlistName = await scriptExecutor(currentTab.id, scripts.getName);
         console.log(playlistName);
+        if(!playlistname[0] || !totalVideos) {
+            document.querySelector('#status').innerHTML = "invalid";
+            return;
+        }
         obj = {
             playlistName: playlistName[0],
             totalVideos: parseInt(totalVideos, 10),
@@ -157,7 +162,7 @@ async function executor() {
         playlists.unshift(obj);
         await addToStorage({"youtodoList": playlists});
     }
-
+    startTracking();
     // let x = await addToStorage(setObj);
     document.querySelector('#status').innerHTML = "success!";
 

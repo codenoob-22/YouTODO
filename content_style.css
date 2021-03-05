@@ -1,5 +1,6 @@
 .youtodo_list_element {
     font-size: 15px;
+    height: 30px;
     margin-left: 10px;
     border: 1px solid black;
 
@@ -10,9 +11,15 @@
     height: 20px;
 }
 
-.youtodo_list_element_right {
-    margin-left: 30px;
-    
+.youtodo_list_delete_button {
+    position: absolute;
+    right: 7.5%;
+    height: 25px;
+}
+
+.youtodo_list_progress {
+    position: absolute;
+    left: 80%;
 }
 
 .youtodo_list {
